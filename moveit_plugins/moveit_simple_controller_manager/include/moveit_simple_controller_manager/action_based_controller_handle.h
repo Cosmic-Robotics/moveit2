@@ -203,10 +203,16 @@ protected:
    */
   std::string getActionName() const
   {
-    if (namespace_.empty())
-      return name_;
-    else
-      return name_ + "/" + namespace_;
+    const std::string node_namespace = node_->get_namespace();
+    std::string action_name;
+    if (!(node_namespace.empty() || node_namespace == "/")) {
+      action_name = node_namespace + "/";
+    }
+    action_name += name_;
+    if (!namespace_.empty()) {
+      action_name += "/" + namespace_;
+    }
+    return action_name;
   }
 
   /**
