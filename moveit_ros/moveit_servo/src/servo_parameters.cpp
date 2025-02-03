@@ -460,7 +460,11 @@ ServoParameters::SharedConstPtr ServoParameters::makeServoParameters(const rclcp
   auto node_parameters = node->get_node_parameters_interface();
 
   // Get the parameters
-  declare(ns, node_parameters);
+  // TODO(yangjames): Commented out for the time being because declaring
+  // parameters explicitly here conflicts with
+  // rclcpp::NodeOptions::automatically_declare_parameters_from_overrides(true);
+  // which MoveItCpp requires.
+  // declare(ns, node_parameters);
   auto parameters = validate(get(ns, node_parameters));
 
   if (parameters)
