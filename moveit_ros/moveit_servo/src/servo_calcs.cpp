@@ -93,14 +93,20 @@ ServoCalcs::ServoCalcs(const rclcpp::Node::SharedPtr& node,
     throw std::runtime_error("Invalid move group name");
   }
 
-  // Subscribe to command topics
+  // Subscribe to command topics. Put them in separate callback groups so they can be processed in parallel.
+  rclcpp::SubscriptionOptions twist_command_subscription_options;
+  twist_command_subscription_options.callback_group = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
   twist_stamped_sub_ = node_->create_subscription<geometry_msgs::msg::TwistStamped>(
       parameters_->cartesian_command_in_topic, rclcpp::SystemDefaultsQoS(),
-      [this](const geometry_msgs::msg::TwistStamped::ConstSharedPtr& msg) { return twistStampedCB(msg); });
+      [this](const geometry_msgs::msg::TwistStamped::ConstSharedPtr& msg) { return twistStampedCB(msg); },
+      twist_command_subscription_options);
 
+  rclcpp::SubscriptionOptions joint_command_subscription_options;
+  joint_command_subscription_options.callback_group = node_->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
   joint_cmd_sub_ = node_->create_subscription<control_msgs::msg::JointJog>(
       parameters_->joint_command_in_topic, rclcpp::SystemDefaultsQoS(),
-      [this](const control_msgs::msg::JointJog::ConstSharedPtr& msg) { return jointCmdCB(msg); });
+      [this](const control_msgs::msg::JointJog::ConstSharedPtr& msg) { return jointCmdCB(msg); },
+      joint_command_subscription_options);
 
   // ROS Server for allowing drift in some dimensions
   drift_dimensions_server_ = node_->create_service<moveit_msgs::srv::ChangeDriftDimensions>(
