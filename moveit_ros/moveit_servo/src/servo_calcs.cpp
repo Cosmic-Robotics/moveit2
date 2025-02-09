@@ -770,21 +770,25 @@ bool ServoCalcs::applyJointUpdate(const Eigen::ArrayXd& delta_theta, sensor_msgs
   return true;
 }
 
-// Spam several redundant points into the trajectory. The first few may be skipped if the
-// time stamp is in the past when it reaches the client. Needed for gazebo simulation.
-// Start from 1 because the first point's timestamp is already 1*parameters_->publish_period
+// Create a longer constant velocity trajectory to compensate for non-real time publication.
 void ServoCalcs::insertRedundantPointsIntoTrajectory(trajectory_msgs::msg::JointTrajectory& joint_trajectory,
                                                      int count) const
 {
   if (count < 2)
     return;
   joint_trajectory.points.resize(count);
-  auto point = joint_trajectory.points[0];
-  // Start from 1 because we already have the first point. End at count+1 so (total #) == count
+  const auto& start_point = joint_trajectory.points[0];
+  const double start_time = start_point.time_from_start.sec + start_point.time_from_start.nanosec * 1e-9;
   for (int i = 1; i < count; ++i)
   {
-    point.time_from_start = rclcpp::Duration::from_seconds((i + 1) * parameters_->publish_period);
-    joint_trajectory.points[i] = point;
+    auto& point = joint_trajectory.points[i];
+    point = start_point;
+    const double time_from_start = start_time + i * parameters_->publish_period;
+    point.time_from_start = rclcpp::Duration::from_seconds(time_from_start);
+    for (int j = 0; j < point.positions.size(); ++j)
+    {
+      point.positions[j] += internal_joint_state_.velocity[j] * time_from_start;
+    }
   }
 }
 
