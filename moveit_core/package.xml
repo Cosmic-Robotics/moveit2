@@ -34,7 +34,7 @@
   <depend>eigen</depend>
   <depend>eigen_stl_containers</depend>
   <depend>generate_parameter_library</depend>
-  <depend>geometric_shapes</depend>
+  <depend version_gte="2.3.1" version_lte="2.3.1">geometric_shapes</depend>
   <depend>geometry_msgs</depend>
   <depend>google_benchmark_vendor</depend>
   <depend>kdl_parser</depend>
